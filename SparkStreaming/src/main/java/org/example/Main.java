@@ -7,7 +7,7 @@ import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
 import org.apache.spark.sql.streaming.Trigger;
 import org.apache.spark.sql.types.DataTypes;
-//import org.apache.spark.api.java.function.VoidFunction2;
+import org.apache.spark.api.java.function.VoidFunction2;
 
 import java.nio.charset.StandardCharsets;
 
@@ -15,14 +15,15 @@ import static org.apache.spark.sql.functions.split;
 import static org.apache.spark.sql.functions.to_date;
 
 public class Main {
-    private static String bootstrap_sever = "172.16.130.253:9092";
+    private static String bootstrap_sever = "localhost:9092";
     public static void main(String[] args) throws StreamingQueryException {
         SparkSession spark = SparkSession
                 .builder()
-               // .master("local")
+                .master("local")
                 .appName("projectxxx")
-                .config("spark.scheduler.mode","FAIR")
                 .getOrCreate();
+
+        spark.sparkContext().setLogLevel("ERROR");
 
         spark.udf().register("deserialize", (byte[] value) -> {
             String strValue = new String(value, StandardCharsets.UTF_8);
@@ -49,7 +50,7 @@ public class Main {
                 split(valueDts.col("value"),",").getItem(6).cast(DataTypes.FloatType).as("max_price"),
                 split(valueDts.col("value"),",").getItem(7).cast(DataTypes.FloatType).as("min_price"),
                 split(valueDts.col("value"),",").getItem(8).cast(DataTypes.FloatType).as("average_price"),
-                split(valueDts.col("value"),",").getItem(9).cast(DataTypes.FloatType).divide(1000).as("+-_variation"),
+                split(valueDts.col("value"),",").getItem(9).cast(DataTypes.FloatType).as("+-_variation"),
                 split(valueDts.col("value"),",").getItem(10).cast(DataTypes.FloatType).as("%_variation"),
                 split(valueDts.col("value"),",").getItem(11).cast(DataTypes.LongType).as("matching_volume"),
                 split(valueDts.col("value"),",").getItem(12).cast(DataTypes.LongType).as("matching_value"),
@@ -59,31 +60,30 @@ public class Main {
                 split(valueDts.col("value"),",").getItem(16).cast(DataTypes.LongType).as("total_value"),
                 split(valueDts.col("value"),",").getItem(17).cast(DataTypes.LongType).as("capitalization"));
 
-//        VoidFunction2<Dataset<Row>, Long> saveFunction = new VoidFunction2<Dataset<Row>, Long>() {
-//            @Override
-//            public void call(Dataset<Row> rowDataset, Long aLong) throws Exception {
-//                rowDataset.write()
-//                        .mode("append")
-//                        .format("jdbc")
-//                        .option("url", "jdbc:mysql://172.16.130.253:3306/stock")
-//                        .option("dbtable","history_price")
-//                        .option("user","root")
-//                        .option("password","NguyenLam2001")
-//                        .option("driver","com.mysql.cj.jdbc.Driver")
-//                        .save();
-//            }
-//        };
+        VoidFunction2<Dataset<Row>, Long> saveFunction = new VoidFunction2<Dataset<Row>, Long>() {
+            @Override
+            public void call(Dataset<Row> rowDataset, Long aLong) throws Exception {
+                rowDataset.write()
+                        .mode("append")
+                        .format("jdbc")
+                        .option("url", "jdbc:mysql://localhost:3306/stock")
+                        .option("dbtable","history_price")
+                        .option("user","root")
+                        .option("password","NguyenLam2001")
+                        .option("driver","com.mysql.cj.jdbc.Driver")
+                        .save();
+            }
+        };
 
         StreamingQuery query = splitDts.writeStream()
                 .outputMode("append")
-                .format("parquet")
-                .option("path","/user/lamnv155/output/")
-            //    .foreachBatch(saveFunction)
-                .option("checkpointLocation","/user/lamnv155/checkpoint/")
+//                .format("parquet")
+//                .option("path","/user/lamnv155/output/")
+                .foreachBatch(saveFunction)
+                .option("checkpointLocation","checkpoint/")
                 .trigger(Trigger.ProcessingTime(1000))
                 .start();
 
         query.awaitTermination();
-      //  spark.sparkContext().stop();
     }
 }
