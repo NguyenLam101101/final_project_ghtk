@@ -45,30 +45,27 @@ def send_message(source_path = "StockData"):
         mlFile.write(str(i))
     time.sleep(5)
 
-for i in range(10):
-    send_message()
-    postToPowerBI()
 
-# with DAG(
-#      default_args={
-#          'depends_on_past': False,
-#          'email_on_failure': False,
-#          'email_on_retry': False,
-#          'retries': 1,
-#          'retry_delay': timedelta(minutes=5)
-#      },
-#      dag_id='pipeline',
-#      start_date=datetime(2022, 8, 15),
-#      schedule_interval=timedelta(seconds=30),
-#      catchup=False,
-#      ) as dag:
-#          t1 = PythonOperator(
-#              task_id='kafka_producer_message',
-#              python_callable=send_message
-#          )
-#          t2 = PythonOperator(
-#              task_id='post_to_PowerBI',
-#              python_callable=postToPowerBI
-#          )
-#          t1 >> t2
+with DAG(
+     default_args={
+         'depends_on_past': False,
+         'email_on_failure': False,
+         'email_on_retry': False,
+         'retries': 1,
+         'retry_delay': timedelta(minutes=5)
+     },
+     dag_id='pipeline',
+     start_date=datetime(2022, 8, 15),
+     schedule_interval=timedelta(seconds=30),
+     catchup=False,
+     ) as dag:
+         t1 = PythonOperator(
+             task_id='kafka_producer_message',
+             python_callable=send_message
+         )
+         t2 = PythonOperator(
+             task_id='post_to_PowerBI',
+             python_callable=postToPowerBI
+         )
+         t1 >> t2
 
