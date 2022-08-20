@@ -1,6 +1,8 @@
 # final_project_ghtk
+
+![alt text](https://github.com/NguyenLam101101/final_project_ghtk/blob/main/Architecture.png)
  
-1. Crawl d? li?u l?ch s? gi� ch?ng kho�n c?a r? ch? s? VN30 v� ??y v�o kafka. Qu� tr�nh ??y d? li?u ???c l?p l?ch b?ng airflow.
-2. SparkStreaming ??c v� x? l� d? li?u t? kafka tr??c khi ??y v�o MySQL.
-3. ??c c�c b?n ghi m?i t? MySQL, th?c hi?n t�nh to�n v�o g?i v�o API do PowerBI cung c?p.
-4. PowerBI visualize d? li?u.
+1. Crawl dữ liệu lịch sử giá chứng khoán của rổ chỉ số VN30 và đẩy vào kafka. Quá trình đẩy dữ liệu được lập lịch bằng airflow.
+2. SparkStreaming đọc và xử lý dữ liệu từ kafka trước khi đẩy vào MySQL.
+3. Đọc các bản ghi mới từ MySQL, thực hiện tính toán vào gửi vào API do PowerBI cung cấp.
+4. PowerBI visualize dữ liệu.
